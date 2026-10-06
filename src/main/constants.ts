@@ -22,6 +22,13 @@ export const DATA_DIR =
 
 mkdirSync(DATA_DIR, { recursive: true });
 
+// DeadKernel: a custom data dir also moves Electron's userData (single-instance lock, caches),
+// so a dev build never shares anything with an installed Vesktop.
+if (process.env.VENCORD_USER_DATA_DIR) app.setPath("userData", DATA_DIR);
+
+// DeadKernel: set when running next to the real Discord app, which keeps the discord:// links.
+export const SIDE_BY_SIDE = !!process.env.VESKTOP_SIDE_BY_SIDE;
+
 export const SESSION_DATA_DIR = join(DATA_DIR, "sessionData");
 app.setPath("sessionData", SESSION_DATA_DIR);
 

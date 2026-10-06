@@ -12,7 +12,7 @@ import "./vesktopProtocol";
 
 import { app, BrowserWindow, nativeTheme } from "electron";
 
-import { DATA_DIR } from "./constants";
+import { DATA_DIR, SIDE_BY_SIDE } from "./constants";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows, mainWin } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
@@ -31,7 +31,7 @@ const isLinux = process.platform === "linux";
 export let enableHardwareAcceleration = true;
 
 function init() {
-    setAsDefaultProtocolClient("discord");
+    if (!SIDE_BY_SIDE) setAsDefaultProtocolClient("discord");
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
 
