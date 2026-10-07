@@ -13,6 +13,7 @@ import "./vesktopProtocol";
 import { app, BrowserWindow, nativeTheme } from "electron";
 
 import { DATA_DIR, SIDE_BY_SIDE } from "./constants";
+import { APP_ID, OWN_IDENTITY } from "./deadkernel";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows, mainWin } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
@@ -101,7 +102,7 @@ function init() {
     });
 
     app.whenReady().then(async () => {
-        if (process.platform === "win32") app.setAppUserModelId("dev.vencord.vesktop");
+        if (process.platform === "win32") app.setAppUserModelId(OWN_IDENTITY ? APP_ID : "dev.vencord.vesktop");
 
         registerScreenShareHandler();
         registerMediaPermissionsHandler();

@@ -25,6 +25,7 @@ import { createAboutWindow } from "./about";
 import { initArRPC } from "./arrpc";
 import { CommandLine } from "./cli";
 import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH } from "./constants";
+import { applyIdentity, ICON, OWN_IDENTITY } from "./deadkernel";
 import { AppEvents } from "./events";
 import { sendRendererCommand } from "./ipcCommands";
 import { darwinURL } from "./main";
@@ -364,6 +365,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
         autoHideMenuBar: enableMenu,
         hasShadow: enableShadow,
         roundedCorners: enableRoundedCorners,
+        ...(OWN_IDENTITY && { icon: ICON }),
         ...getWindowBoundsOptions()
     };
 
@@ -406,6 +408,7 @@ function createMainWindow() {
     const win = (mainWin = new BrowserWindow(buildBrowserWindowOptions()));
 
     win.setMenuBarVisibility(false);
+    applyIdentity(win);
     if (process.platform === "darwin" && Settings.store.nativeTitleBar) win.setWindowButtonVisibility(false);
 
     win.on("close", e => {
