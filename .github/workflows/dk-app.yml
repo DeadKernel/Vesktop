@@ -40,11 +40,26 @@ jobs:
             - name: Build
               run: pnpm build
 
-            - name: Package and publish
+            # One release, created once with all its files. electron-builder's own publishing uploads
+            # in parallel and, when no release exists yet, each upload created its own release.
+            - name: Package
+              shell: bash
+              env:
+                  VERSION: ${{ inputs.version || github.ref_name }}
+              run: |
+                  export DK_VERSION="${VERSION#v}"
+                  pnpm electron-builder --win --config electron-builder.deadkernel.cjs --publish never
+
+            - name: Publish
               shell: bash
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   VERSION: ${{ inputs.version || github.ref_name }}
               run: |
-                  export DK_VERSION="${VERSION#v}"
-                  pnpm electron-builder --win --config electron-builder.deadkernel.cjs --publish always
+                  V="${VERSION#v}"
+                  NAME=$(node -p "require('./brand.json').name")
+                  git fetch -q --force origin "refs/tags/v$V:refs/tags/v$V"
+                  NOTES=$(git tag -l --format="%(contents)" "v$V")
+                  [ -n "$NOTES" ] || NOTES="$NAME $V"
+                  gh release create "v$V" --verify-tag --latest --title "$NAME $V" --notes "$NOTES" \
+                      "dist/$NAME-Setup.exe" "dist/$NAME-Setup.exe.blockmap" dist/latest.yml
