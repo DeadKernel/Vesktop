@@ -1,0 +1,50 @@
+# DeadKernel's Windows installer (electron-builder.deadkernel.cjs, named per brand.json), published as
+# a release here. The installed app's own updater (electron-updater) watches these releases and
+# offers each new one. Push a tag v<version> (e.g. v2026.1007.1: year, month*100+day, n), or
+# dk-sync.yml calls this after folding in a new upstream Vesktop release.
+name: DeadKernel app
+on:
+    push:
+        tags:
+            - v*
+    workflow_call:
+        inputs:
+            version:
+                type: string
+                required: true
+
+permissions:
+    contents: write
+
+jobs:
+    Windows:
+        if: github.repository == 'DeadKernel/Vesktop'
+        runs-on: windows-latest
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.version && format('refs/tags/v{0}', inputs.version) || github.ref }}
+
+            - uses: pnpm/action-setup@v6
+
+            - name: Use Node.js 24
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: 24
+                  cache: "pnpm"
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build
+              run: pnpm build
+
+            - name: Package and publish
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERSION: ${{ inputs.version || github.ref_name }}
+              run: |
+                  export DK_VERSION="${VERSION#v}"
+                  pnpm electron-builder --win --config electron-builder.deadkernel.cjs --publish always

@@ -1,0 +1,88 @@
+# Folds each new upstream Vesktop release into DeadKernel's app and ships it if it builds. Vesktop is
+# the shell (Electron, screen share, tray, updater); its releases bring Electron security updates.
+# Upstream's releases rather than its main: the shell only moves to versions upstream has shipped.
+#
+#   new upstream release → merge into main → lint, types, build → push, tag v<version>, installer
+#
+# Nothing ships if the merge conflicts or a check fails: the run fails, GitHub emails the owner, and
+# main is left untouched. Discord's own updates need nothing here: the app loads discord.com, and
+# fixes for Discord's changes come through Vencord (DeadKernel/Vencord's dk-sync.yml).
+name: DeadKernel sync
+on:
+    schedule:
+        - cron: "41 6 * * *"
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    Sync:
+        if: github.repository == 'DeadKernel/Vesktop'
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.ship.outputs.version }}
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: main
+                  fetch-depth: 0
+
+            - name: Merge upstream Vesktop's latest release
+              id: merge
+              run: |
+                  git config user.name "DeadKernel sync"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  UP=https://github.com/Vencord/Vesktop.git
+                  LATEST=$(git -c versionsort.suffix=- ls-remote --tags --refs --sort=-v:refname "$UP" 'v*' | head -1 | sed 's|.*refs/tags/||')
+                  git fetch -q "$UP" "refs/tags/$LATEST:refs/upstream/$LATEST"
+                  if git merge-base --is-ancestor "refs/upstream/$LATEST" HEAD; then
+                      echo "Already has upstream Vesktop $LATEST."; echo "new=" >> "$GITHUB_OUTPUT"; exit 0
+                  fi
+                  echo "new=$LATEST" >> "$GITHUB_OUTPUT"
+                  if ! git merge --no-edit -m "Fold in upstream Vesktop $LATEST" "refs/upstream/$LATEST"; then
+                      echo "::error::Upstream Vesktop $LATEST conflicts with DeadKernel in:"
+                      git diff --name-only --diff-filter=U
+                      git merge --abort
+                      exit 1
+                  fi
+
+            - uses: pnpm/action-setup@v6
+              if: steps.merge.outputs.new != ''
+
+            - name: Use Node.js 24
+              if: steps.merge.outputs.new != ''
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: 24
+                  cache: "pnpm"
+
+            - name: Test (lint, types, build)
+              if: steps.merge.outputs.new != ''
+              run: |
+                  pnpm install --frozen-lockfile
+                  pnpm test
+                  pnpm build
+
+            - name: Push and tag
+              id: ship
+              if: steps.merge.outputs.new != ''
+              run: |
+                  git push origin HEAD:main
+                  # year . month*100+day . n: semver without leading zeros, and always increasing
+                  BASE="$(date -u +%Y).$(( $(date -u +%-m) * 100 + $(date -u +%-d) ))"
+                  N=$(git tag -l "v$BASE.*" | wc -l)
+                  VERSION="$BASE.$((N + 1))"
+                  git tag -a "v$VERSION" -m "Folds in upstream Vesktop ${{ steps.merge.outputs.new }}"
+                  git push origin "v$VERSION"
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    App:
+        needs: Sync
+        if: needs.Sync.outputs.version != ''
+        uses: ./.github/workflows/dk-app.yml
+        with:
+            version: ${{ needs.Sync.outputs.version }}
+        permissions:
+            contents: write

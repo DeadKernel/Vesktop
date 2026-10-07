@@ -13,6 +13,9 @@
         // @vencord/types has some errors for now
         "skipLibCheck": true,
 
+        // brand.json: the app's name and Windows app id (DeadKernel)
+        "resolveJsonModule": true,
+
         "paths": {
             "*": ["./src/*"],
         },

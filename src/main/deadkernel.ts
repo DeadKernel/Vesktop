@@ -4,29 +4,37 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-// DeadKernel side by side, on Windows: its own icon and taskbar identity instead of Electron's
-// (the dev build runs a bare electron.exe) or the installed Vesktop's. Windows names and draws
-// notifications and pinned buttons from a Start Menu shortcut with the same app id, so this keeps
-// one: "Discord (DeadKernel)", which also launches it. Icon: static/deadkernel, drawn by the
-// Vencord repo's personal/tools/make-icon.mjs.
+// DeadKernel's own app. Two ways it runs:
+// - BRANDED: the installer friends get (electron-builder.deadkernel.cjs), named per brand.json.
+// - Side by side: Aditya's dev build, a bare electron.exe started by the Vencord repo's
+//   personal/tools/vesktop-dev.ps1.
+// Either way it's not Vesktop: its own icon and Windows app id (taskbar, pins, notifications),
+// our tray and splash, Vencord from DeadKernel/Vencord's releases, and it leaves discord:// links
+// to the real Discord app. Icons: static/deadkernel, drawn by personal/tools/make-icon.mjs.
 
-import { BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, shell } from "electron";
 import { existsSync } from "fs";
 import { join } from "path";
 import { STATIC_DIR } from "shared/paths";
 
+import brand from "../../brand.json";
 import { SIDE_BY_SIDE } from "./constants";
 
-export const OWN_IDENTITY = SIDE_BY_SIDE && process.platform === "win32";
-export const APP_ID = "DeadKernel.Discord";
+export const BRANDED = app.getName() === brand.name;
+export const DEADKERNEL = BRANDED || SIDE_BY_SIDE;
+export const OWN_IDENTITY = DEADKERNEL && process.platform === "win32";
+/** the installer's shortcut carries the same id (brand.json). The dev build has its own, so the
+ * two never share a taskbar button. */
+export const APP_ID = BRANDED ? brand.appId : `${brand.appId}.Dev`;
 export const ICON = join(STATIC_DIR, "deadkernel", "icon.ico");
-const NAME = "Discord (DeadKernel)";
+export const VENCORD_REPO = DEADKERNEL ? "DeadKernel/Vencord" : "Vendicated/Vencord";
+const DEV_NAME = `${brand.name} (dev)`;
 
-/** How to start it again: personal/tools/vesktop-dev.ps1 passes its own path (it sets the
- * environment this build needs), so a pinned button or the shortcut runs that script. */
+/** Dev only: how to start it again. vesktop-dev.ps1 passes its own path (it sets the environment
+ * this build needs), so a pinned button or the Start Menu shortcut runs that script. */
 function relaunch() {
     const launcher = process.env.VESKTOP_LAUNCHER;
-    if (!launcher || !existsSync(launcher)) return null;
+    if (BRANDED || !launcher || !existsSync(launcher)) return null;
     const powershell = join(
         process.env.SystemRoot ?? "C:\\Windows",
         "System32",
@@ -45,11 +53,12 @@ export function applyIdentity(win: BrowserWindow) {
     win.setAppDetails({
         appId: APP_ID,
         appIconPath: ICON,
-        ...(r && { relaunchCommand: `"${r.powershell}" ${r.args}`, relaunchDisplayName: NAME })
+        ...(r && { relaunchCommand: `"${r.powershell}" ${r.args}`, relaunchDisplayName: DEV_NAME })
     });
+    // the installer makes the branded app's shortcut; the dev build keeps its own, because Windows
+    // names notifications and pinned buttons after the shortcut with the app's id
     if (!r) return;
-    const programs = join(process.env.APPDATA ?? "", "Microsoft", "Windows", "Start Menu", "Programs");
-    const link = join(programs, `${NAME}.lnk`);
+    const link = join(process.env.APPDATA ?? "", "Microsoft", "Windows", "Start Menu", "Programs", `${DEV_NAME}.lnk`);
     try {
         shell.writeShortcutLink(link, existsSync(link) ? "replace" : "create", {
             target: r.powershell,
@@ -57,7 +66,7 @@ export function applyIdentity(win: BrowserWindow) {
             icon: ICON,
             iconIndex: 0,
             appUserModelId: APP_ID,
-            description: NAME
+            description: DEV_NAME
         });
     } catch (e) {
         console.error("DeadKernel: couldn't write the Start Menu shortcut", e);

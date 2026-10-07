@@ -12,8 +12,8 @@ import "./vesktopProtocol";
 
 import { app, BrowserWindow, nativeTheme } from "electron";
 
-import { DATA_DIR, SIDE_BY_SIDE } from "./constants";
-import { APP_ID, OWN_IDENTITY } from "./deadkernel";
+import { DATA_DIR } from "./constants";
+import { APP_ID, DEADKERNEL, OWN_IDENTITY } from "./deadkernel";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows, mainWin } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
@@ -32,7 +32,8 @@ const isLinux = process.platform === "linux";
 export let enableHardwareAcceleration = true;
 
 function init() {
-    if (!SIDE_BY_SIDE) setAsDefaultProtocolClient("discord");
+    // DeadKernel leaves discord:// links to the real Discord app
+    if (!DEADKERNEL) setAsDefaultProtocolClient("discord");
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
 

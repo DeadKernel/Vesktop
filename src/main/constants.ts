@@ -15,7 +15,7 @@ const vesktopDir = dirname(process.execPath);
 export const PORTABLE =
     process.platform === "win32" &&
     !process.execPath.toLowerCase().endsWith("electron.exe") &&
-    !existsSync(join(vesktopDir, "Uninstall Vesktop.exe"));
+    !existsSync(join(vesktopDir, `Uninstall ${app.getName()}.exe`)); // DeadKernel: "Uninstall DeadKernel.exe"
 
 export const DATA_DIR =
     process.env.VENCORD_USER_DATA_DIR || (PORTABLE ? join(vesktopDir, "Data") : join(app.getPath("userData")));

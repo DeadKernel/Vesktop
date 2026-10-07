@@ -7,6 +7,7 @@ on:
 
 jobs:
     update:
+        if: github.repository == 'Vencord/Vesktop' # DeadKernel: upstream's job, not ours
         runs-on: ubuntu-latest
         steps:
             - name: Update scripts/_latestVesktopVersion.txt file in vencord.dev repo

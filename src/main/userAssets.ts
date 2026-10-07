@@ -12,6 +12,7 @@ import { STATIC_DIR } from "shared/paths";
 import { pathToFileURL } from "url";
 
 import { DATA_DIR } from "./constants";
+import { DEADKERNEL } from "./deadkernel";
 import { AppEvents } from "./events";
 import { mainWin } from "./mainWindow";
 import { fileExistsAsync } from "./utils/fileExists";
@@ -20,11 +21,13 @@ import { handle } from "./utils/ipcWrappers";
 const CUSTOMIZABLE_ASSETS = ["splash", "tray", "trayUnread"] as const;
 export type UserAssetType = (typeof CUSTOMIZABLE_ASSETS)[number];
 
-const DEFAULT_ASSETS: Record<UserAssetType, string> = {
-    splash: "splash.webp",
-    tray: `tray/${process.platform === "darwin" ? "trayTemplate" : "tray"}.png`,
-    trayUnread: "tray/trayUnread.png"
-};
+const DEFAULT_ASSETS: Record<UserAssetType, string> = DEADKERNEL
+    ? { splash: "deadkernel/icon.png", tray: "deadkernel/tray.png", trayUnread: "deadkernel/trayUnread.png" }
+    : {
+          splash: "splash.webp",
+          tray: `tray/${process.platform === "darwin" ? "trayTemplate" : "tray"}.png`,
+          trayUnread: "tray/trayUnread.png"
+      };
 
 const UserAssetFolder = join(DATA_DIR, "userAssets");
 

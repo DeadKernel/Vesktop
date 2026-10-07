@@ -12,6 +12,7 @@ on:
 
 jobs:
   winget:
+    if: github.repository == 'Vencord/Vesktop' # DeadKernel: upstream's job, not ours
     name: Publish winget package
     runs-on: windows-latest
     steps:
