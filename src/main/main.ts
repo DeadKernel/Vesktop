@@ -13,7 +13,7 @@ import "./vesktopProtocol";
 import { app, BrowserWindow, nativeTheme } from "electron";
 
 import { DATA_DIR } from "./constants";
-import { APP_ID, DEADKERNEL, OWN_IDENTITY } from "./deadkernel";
+import { APP_ID, BRANDED, DEADKERNEL, OWN_IDENTITY } from "./deadkernel";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows, mainWin } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
@@ -129,7 +129,16 @@ if (!app.requestSingleInstanceLock({ IS_DEV })) {
 }
 
 async function bootstrap() {
-    if (!Object.hasOwn(State.store, "firstLaunch")) {
+    if (!Object.hasOwn(State.store, "firstLaunch") && BRANDED) {
+        // Accord opens straight into Discord: no "Welcome to Vesktop" setup. Its answers, decided:
+        // stable Discord, game activity on, closes to the tray, doesn't start with Windows, and
+        // a clean Vencord (not one imported from a Vencord install, which could switch ours off).
+        State.store.firstLaunch = false;
+        Settings.store.discordBranch = "stable";
+        Settings.store.minimizeToTray = true;
+        Settings.store.arRPC = true;
+        createWindows();
+    } else if (!Object.hasOwn(State.store, "firstLaunch")) {
         createFirstLaunchTour();
     } else {
         createWindows();
