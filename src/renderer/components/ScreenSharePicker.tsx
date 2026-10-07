@@ -29,6 +29,7 @@ import {
     openModal,
     Select,
     UserStore,
+    useEffect,
     useState
 } from "@vencord/types/webpack/common";
 import { Node } from "@vencord/venmic";
@@ -72,6 +73,28 @@ interface Source {
     id: string;
     name: string;
     url: string;
+    /** DeadKernel: the window's app icon, shown until its thumbnail arrives */
+    icon?: string;
+}
+
+// DeadKernel: thumbnails arrive after the picker opens (main/screenShare.ts capturePreviews)
+let thumbnails: Record<string, string> = {};
+const thumbnailListeners = new Set<() => void>();
+
+export function setScreenShareThumbnails(data: Record<string, string>) {
+    thumbnails = data;
+    thumbnailListeners.forEach(l => l());
+}
+
+function useThumbnails() {
+    const [current, setCurrent] = useState(thumbnails);
+    useEffect(() => {
+        const update = () => setCurrent(thumbnails);
+        thumbnailListeners.add(update);
+        update();
+        return () => void thumbnailListeners.delete(update);
+    }, []);
+    return current;
 }
 
 export let currentSettings: StreamSettings | null = null;
@@ -145,6 +168,7 @@ if (isLinux) {
 
 export function openScreenSharePicker(screens: Source[], skipPicker: boolean) {
     let didSubmit = false;
+    thumbnails = {};
     return new Promise<StreamPick>((resolve, reject) => {
         const key = openModal(
             props => (
@@ -187,9 +211,10 @@ export function openScreenSharePicker(screens: Source[], skipPicker: boolean) {
 }
 
 function ScreenPicker({ screens, chooseScreen }: { screens: Source[]; chooseScreen: (id: string) => void }) {
+    const thumbs = useThumbnails();
     return (
         <div className={cl("screen-grid")}>
-            {screens.map(({ id, name, url }) => (
+            {screens.map(({ id, name, url, icon }) => (
                 <label key={id} className={cl("screen-label")}>
                     <input
                         type="radio"
@@ -199,7 +224,11 @@ function ScreenPicker({ screens, chooseScreen }: { screens: Source[]; chooseScre
                         onChange={() => chooseScreen(id)}
                     />
 
-                    <img src={url} alt="" />
+                    {url || thumbs[id] ? (
+                        <img src={url || thumbs[id]} alt="" />
+                    ) : (
+                        <div className={cl("screen-pending")}>{icon && <img src={icon} alt="" />}</div>
+                    )}
                     <Paragraph className={cl("screen-name")}>{name}</Paragraph>
                 </label>
             ))}
@@ -366,7 +395,7 @@ function StreamSettingsUi({
     const [thumb] = useAwaiter(
         () => (skipPicker ? Promise.resolve(source.url) : VesktopNative.capturer.getLargeThumbnail(source.id)),
         {
-            fallbackValue: source.url,
+            fallbackValue: source.url || thumbnails[source.id],
             deps: [source.id]
         }
     );

@@ -83,5 +83,7 @@ export const enum IpcCommands {
 
     GET_LANGUAGES = "navigator.languages",
 
-    SCREEN_SHARE_PICKER = "screenshare:picker"
+    SCREEN_SHARE_PICKER = "screenshare:picker",
+    // DeadKernel: the picker's thumbnails, sent once captured (main/screenShare.ts)
+    SCREEN_SHARE_THUMBNAILS = "screenshare:thumbnails"
 }

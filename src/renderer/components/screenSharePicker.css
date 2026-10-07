@@ -41,6 +41,28 @@
     outline: 2px solid var(--brand-500);
 }
 
+/* DeadKernel: thumbnails fill their cell (they're captured at 2x for sharp scaling) */
+.vcd-screen-picker-screen-label > img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+}
+
+/* DeadKernel: a window's tile before its thumbnail arrives: the thumbnail's shape, its app icon */
+.vcd-screen-picker-screen-pending {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: grid;
+    place-items: center;
+    background: var(--background-base-lower, rgb(0 0 0 / 20%));
+}
+
+.vcd-screen-picker-screen-pending img {
+    width: 32px;
+    height: 32px;
+    opacity: 0.7;
+}
+
 .vcd-screen-picker-screen-name {
     white-space: nowrap;
     text-overflow: ellipsis;

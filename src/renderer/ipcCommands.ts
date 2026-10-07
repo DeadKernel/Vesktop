@@ -7,7 +7,7 @@
 import { SettingsRouter } from "@vencord/types/webpack/common";
 import { IpcCommands } from "shared/IpcEvents";
 
-import { openScreenSharePicker } from "./components/ScreenSharePicker";
+import { openScreenSharePicker, setScreenShareThumbnails } from "./components/ScreenSharePicker";
 
 type IpcCommandHandler = (data: any) => any;
 
@@ -52,3 +52,4 @@ onIpcCommand(IpcCommands.NAVIGATE_SETTINGS, () => {
 onIpcCommand(IpcCommands.GET_LANGUAGES, () => navigator.languages);
 
 onIpcCommand(IpcCommands.SCREEN_SHARE_PICKER, data => openScreenSharePicker(data.screens, data.skipPicker));
+onIpcCommand(IpcCommands.SCREEN_SHARE_THUMBNAILS, data => setScreenShareThumbnails(data));
