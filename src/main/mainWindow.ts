@@ -25,7 +25,7 @@ import { createAboutWindow } from "./about";
 import { initArRPC } from "./arrpc";
 import { CommandLine } from "./cli";
 import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH } from "./constants";
-import { applyIdentity, ICON, OWN_IDENTITY } from "./deadkernel";
+import { APP_NAME, applyIdentity, ICON, OWN_IDENTITY } from "./deadkernel";
 import { AppEvents } from "./events";
 import { sendRendererCommand } from "./ipcCommands";
 import { darwinURL } from "./main";
@@ -290,7 +290,7 @@ function initStaticTitle(win: BrowserWindow) {
 
     addSettingsListener("staticTitle", enabled => {
         if (enabled) {
-            win.setTitle("Vesktop");
+            win.setTitle(APP_NAME);
             win.on("page-title-updated", listener);
         } else {
             win.off("page-title-updated", listener);
@@ -384,7 +384,7 @@ function buildBrowserWindowOptions(): BrowserWindowConstructorOptions {
     }
 
     if (staticTitle) {
-        options.title = "Vesktop";
+        options.title = APP_NAME;
     }
 
     if (process.platform === "darwin") {

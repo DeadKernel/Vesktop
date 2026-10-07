@@ -11,6 +11,8 @@
 // Either way it's not Vesktop: its own icon and Windows app id (taskbar, pins, notifications),
 // our tray and splash, Vencord from DeadKernel/Vencord's releases, and it leaves discord:// links
 // to the real Discord app. Icons: static/deadkernel, drawn by personal/tools/make-icon.mjs.
+// Soft branding: the name in brand.json (Accord) is only what Windows shows. The window is titled
+// by Discord, and nothing inside the app uses the name.
 
 import { app, BrowserWindow, shell } from "electron";
 import { existsSync } from "fs";
@@ -29,6 +31,8 @@ export const APP_ID = BRANDED ? brand.appId : `${brand.appId}.Dev`;
 export const ICON = join(STATIC_DIR, "deadkernel", "icon.ico");
 export const VENCORD_REPO = DEADKERNEL ? "DeadKernel/Vencord" : "Vendicated/Vencord";
 const DEV_NAME = `${brand.name} (dev)`;
+/** what Windows shows: the tray's tooltip, the static window title */
+export const APP_NAME = DEADKERNEL ? brand.name : "Vesktop";
 
 /** Dev only: how to start it again. vesktop-dev.ps1 passes its own path (it sets the environment
  * this build needs), so a pinned button or the Start Menu shortcut runs that script. */

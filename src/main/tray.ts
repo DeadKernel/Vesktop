@@ -7,6 +7,7 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
 
 import { createAboutWindow } from "./about";
+import { APP_NAME } from "./deadkernel";
 import { AppEvents } from "./events";
 import { Settings } from "./settings";
 import { resolveAssetPath } from "./userAssets";
@@ -61,7 +62,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
             }
         },
         {
-            label: "Reset Vesktop",
+            label: `Reset ${APP_NAME}`,
             async click() {
                 await clearData(win);
             }
@@ -86,7 +87,7 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
     ]);
 
     tray = new Tray(await resolveAssetPath(trayVariant));
-    tray.setToolTip("Vesktop");
+    tray.setToolTip(APP_NAME);
     tray.setContextMenu(trayMenu);
     tray.on("click", onTrayClick);
 }
