@@ -28,8 +28,8 @@ import {
     Modal,
     openModal,
     Select,
-    UserStore,
     useEffect,
+    UserStore,
     useState
 } from "@vencord/types/webpack/common";
 import { Node } from "@vencord/venmic";
