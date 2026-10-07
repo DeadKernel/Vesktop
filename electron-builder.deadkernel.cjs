@@ -28,9 +28,11 @@ const config = {
         icon: "static/deadkernel/icon.ico",
         target: [{ target: "nsis", arch: ["x64"] }]
     },
-    // one click, per user, into its own folder. Not Vesktop's installer.nsh: that pins the install to
-    // %LocalAppData%\vesktop, which would overwrite a real Vesktop.
+    // one click, per user, into its own folder (%LocalAppData%\Programs\Accord). The include must be
+    // ours: without one, electron-builder picks up build/installer.nsh, Vesktop's, which pins the
+    // install to %LocalAppData%\vesktop, and the first Accord build overwrote a real Vesktop there.
     nsis: {
+        include: "build/deadkernel-installer.nsh",
         oneClick: true,
         perMachine: false,
         artifactName: `${brand.name}-Setup.exe`,
