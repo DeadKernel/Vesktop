@@ -6,7 +6,7 @@
 
 // DeadKernel's own app. Two ways it runs:
 // - BRANDED: the installer friends get (electron-builder.deadkernel.cjs), named per brand.json.
-// - Side by side: Aditya's dev build, a bare electron.exe started by the Vencord repo's
+// - Side by side: the owner's dev build, a bare electron.exe started by the Vencord repo's
 //   personal/tools/vesktop-dev.ps1.
 // Either way it's not Vesktop: its own icon and Windows app id (taskbar, pins, notifications),
 // our tray and splash, Vencord from DeadKernel/Vencord's releases, and it leaves discord:// links
