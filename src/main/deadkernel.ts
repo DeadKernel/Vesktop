@@ -14,9 +14,10 @@
 // Soft branding: the name in brand.json (Accord) is only what Windows shows. The window is titled
 // by Discord, and nothing inside the app uses the name.
 
-import { app, BrowserWindow, shell } from "electron";
 import { existsSync } from "fs";
 import { join } from "path";
+
+import { app, BrowserWindow, shell } from "electron";
 import { STATIC_DIR } from "shared/paths";
 
 import brand from "../../brand.json";

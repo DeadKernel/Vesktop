@@ -17,10 +17,10 @@
         "resolveJsonModule": true,
 
         "paths": {
-            "*": ["./src/*"],
+            "*": ["./src/*"]
         },
 
         "types": ["node", "@vencord/types"]
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "packages/discord-rpc/src/**/*"]
 }
