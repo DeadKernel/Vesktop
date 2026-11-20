@@ -10,12 +10,10 @@ import { desktopCapturer, session, Streams } from "electron";
 import type { StreamPick } from "renderer/components/ScreenSharePicker";
 import { IpcCommands, IpcEvents } from "shared/IpcEvents";
 
+import { IS_WAYLAND } from "./constants";
 import { sendRendererCommand } from "./ipcCommands";
 import { handle } from "./utils/ipcWrappers";
 import { isDiscordUrl } from "./utils/isDiscordUrl";
-
-const isWayland =
-    process.platform === "linux" && (process.env.XDG_SESSION_TYPE === "wayland" || !!process.env.WAYLAND_DISPLAY);
 
 const supportsLoopbackWithoutChrome = process.platform === "win32" && Number(release().split(".").pop()) >= 19045;
 
@@ -72,7 +70,7 @@ export function registerScreenShareHandler() {
 
         // request full resolution on wayland right away because we always only end up with one result anyway.
         // Elsewhere: names and app icons now, thumbnails right after (capturePreviews)
-        const width = isWayland ? 1920 : 0;
+        const width = IS_WAYLAND ? 1920 : 0;
         const sources = await desktopCapturer
             .getSources({
                 types: ["window", "screen"],
@@ -80,21 +78,21 @@ export function registerScreenShareHandler() {
                     width,
                     height: width * (9 / 16)
                 },
-                fetchWindowIcons: !isWayland
+                fetchWindowIcons: !IS_WAYLAND
             })
             .catch(err => console.error("Error during screenshare picker", err));
 
         if (!sources) return callback(null);
-        if (!isWayland) capturePreviews(["window", "screen"]);
+        if (!IS_WAYLAND) capturePreviews(["window", "screen"]);
 
         const data = sources.map(({ id, name, thumbnail, appIcon }) => ({
             id,
             name,
-            url: isWayland ? thumbnail.toDataURL() : "",
+            url: IS_WAYLAND ? thumbnail.toDataURL() : "",
             icon: appIcon && !appIcon.isEmpty() ? appIcon.toDataURL() : undefined
         }));
 
-        if (isWayland) {
+        if (IS_WAYLAND) {
             const video = data[0];
             if (video) {
                 const stream = await sendRendererCommand<StreamPick>(IpcCommands.SCREEN_SHARE_PICKER, {
