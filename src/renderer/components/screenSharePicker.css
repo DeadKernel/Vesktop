@@ -33,6 +33,9 @@
     padding: 8px;
     cursor: pointer;
     display: grid;
+    /* DeadKernel: the cell can't grow past the tile, so a long window title ends in an ellipsis
+       (it used to spill out both sides and get cut mid-word) */
+    grid-template-columns: minmax(0, 1fr);
     justify-items: center;
 }
 
@@ -69,6 +72,7 @@
     text-align: center;
     font-weight: 600;
     margin-inline: 0.5em;
+    max-width: calc(100% - 1em);
 }
 
 .vcd-screen-picker-card {
@@ -81,8 +85,12 @@
     margin-bottom: 0.5em;
 }
 
+/* DeadKernel: capped, so a tall window (a phone-shaped app) no longer fills the dialog and pushes
+   the stream settings below the fold */
 .vcd-screen-picker-preview-img {
-    width: 90%;
+    max-width: 90%;
+    max-height: 240px;
+    object-fit: contain;
     margin-bottom: 0.5em;
 }
 
