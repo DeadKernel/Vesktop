@@ -8,6 +8,7 @@ import { copyFile, rm } from "fs/promises";
 
 import { BuildContext, BuildOptions, context, Plugin } from "esbuild";
 
+import { fileImportPlugin } from "./fileImportPlugin.mts";
 import { includeDirPlugin } from "./includeDirPlugin.mts";
 import vencordDep from "./vencordDep.mjs";
 
@@ -140,6 +141,12 @@ await Promise.all([
     }),
     createContext({
         ...NodeCommonOpts,
+        entryPoints: ["src/main/keybinds/hookProcess.ts"],
+        plugins: [uiohookBinaryPlugin],
+        outfile: "dist/js/hookProcess.js"
+    }),
+    createContext({
+        ...NodeCommonOpts,
         entryPoints: ["src/preload/index.ts"],
         outfile: "dist/js/preload.js",
         footer: { js: "//# sourceURL=VesktopPreload" }
@@ -166,7 +173,7 @@ await Promise.all([
         jsxFactory: "VencordCreateElement",
         jsxFragment: "VencordFragment",
         external: ["@vencord/types/*"],
-        plugins: [vencordDep, includeDirPlugin("patches", "src/renderer/patches")],
+        plugins: [vencordDep, fileImportPlugin, includeDirPlugin("patches", "src/renderer/patches")],
         footer: { js: "//# sourceURL=VesktopRenderer" }
     })
 ]);

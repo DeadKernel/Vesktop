@@ -13,6 +13,7 @@ import {
     dialog,
     Menu,
     MenuItemConstructorOptions,
+    MessageBoxOptions,
     nativeTheme,
     Rectangle,
     screen,
@@ -26,18 +27,19 @@ import type { SettingsStore } from "shared/utils/SettingsStore";
 
 import { createAboutWindow } from "./about";
 import { CommandLine } from "./cli";
-import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MessageBoxChoice, MIN_HEIGHT, MIN_WIDTH } from "./constants";
+import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH } from "./constants";
 import { APP_NAME, applyIdentity, ICON, OWN_IDENTITY } from "./deadkernel";
 import { AppEvents } from "./events";
 import { sendRendererCommand } from "./ipcCommands";
 import { darwinURL } from "./main";
 import { Settings, State, VencordSettings } from "./settings";
-import { createSplashWindow, updateSplashMessage } from "./splash";
+import { createSplashWindow, getSplashWindow, updateSplashMessage } from "./splash";
 import { destroyTray, initTray } from "./tray";
 import { clearData } from "./utils/clearData";
 import { isDiscordUrl } from "./utils/isDiscordUrl";
 import { handleExternalUrl, makeLinksOpenExternally } from "./utils/makeLinksOpenExternally";
 import { relaunch } from "./utils/relaunch";
+import { showWindow } from "./utils/showWindow";
 import { applyDeckKeyboardFix, askToApplySteamLayout, isDeckGameMode } from "./utils/steamOS";
 import { downloadVencordFiles, isValidVencordInstall } from "./utils/vencordLoader";
 import { VENCORD_FILES_DIR } from "./vencordFilesDir";
@@ -499,20 +501,45 @@ function retryUrl(url: string, description: string) {
     setTimeout(() => loadUrl(url), retryDelay);
 }
 
-async function showStartupError(error: unknown) {
-    const { response } = await dialog.showMessageBox({
+const enum StartupErrorChoice {
+    Repair,
+    Quit,
+    Dismiss
+}
+
+export async function showStartupError(error: unknown) {
+    console.error("Failed to start Vesktop:", error);
+
+    const splash = getSplashWindow();
+    const hasMainWindow = mainWin && !mainWin.isDestroyed();
+    let parent = splash;
+    if (hasMainWindow) {
+        splash?.hide();
+        parent = mainWin;
+    }
+
+    const options: MessageBoxOptions = {
         type: "error",
         message: "Vesktop failed to start",
         detail: `${error}\n\nRepair will re-download Vencord and restart Vesktop.`,
-        buttons: ["Repair", "Quit"],
-        defaultId: MessageBoxChoice.Default,
-        cancelId: MessageBoxChoice.Cancel
-    });
+        buttons: hasMainWindow ? ["Repair", "Quit", "Dismiss"] : ["Repair", "Quit"],
+        defaultId: StartupErrorChoice.Repair,
+        cancelId: hasMainWindow ? StartupErrorChoice.Dismiss : StartupErrorChoice.Quit
+    };
 
-    if (response === MessageBoxChoice.Cancel) return app.exit(1);
+    if (parent) {
+        showWindow(parent);
+    }
+    const { response } = await (parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options));
 
-    updateSplashMessage("Repairing Vencord...");
-    downloadVencordFiles().then(relaunch, showStartupError);
+    if (response === StartupErrorChoice.Quit) {
+        return app.exit(1);
+    }
+
+    if (response === StartupErrorChoice.Repair) {
+        updateSplashMessage("Repairing Vencord...");
+        downloadVencordFiles().then(relaunch, showStartupError);
+    }
 }
 
 export async function createWindows() {
@@ -536,7 +563,6 @@ export async function createWindows() {
 
         mainWin = createMainWindow();
     } catch (err) {
-        console.error("Failed to start Vesktop:", err);
         return showStartupError(err);
     }
 

@@ -5,6 +5,8 @@ on:
         types:
             - published
 
+permissions: {}
+
 jobs:
     update:
         if: github.repository == 'Vencord/Vesktop' # DeadKernel: upstream's job, not ours
